@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+  <head>
+	<title>Hello from Flask</title>
+  </head>
+  <body>
+  {% for email in emails %}
+    <li>{{ email.date }}</li>
+	{% else %}
+  		<h1>No emails!</h1>
+	{% endfor %}
+  </body>
+</html>
+
