@@ -8,7 +8,6 @@ import contextio as c
 CONSUMER_SECRET = 'pass'
 ID = 'id' '''
 
-
 context_io = c.ContextIO(
 	consumer_key=CONSUMER_KEY, 
 	consumer_secret=CONSUMER_SECRET
@@ -17,7 +16,7 @@ context_io = c.ContextIO(
 #---------------template in html---------------
 @app.route('/')
 def hello(name=None):
-    return render_template('simple.html', emails=messages())
+    return render_template('slides.html', emails=messages())
 
 
 

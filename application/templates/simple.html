@@ -1,13 +1,18 @@
 <!doctype html>
 <html>
   <head>
-	<title>Hello from Flask</title>
+	<title>Retrieve emails</title>
   </head>
   <body>
   {% for email in emails %}
-    <li>{{ email.date }}</li>
+    <li><div class='subject'>{{ email.subject }}<div></li>
+      <ul>
+        <li><div class='from'>{{ email.addresses.from.name }}<div></li>
+        <li><div class='to'>{{ email.addresses.to[0].email }}<div></li>
+      </ul>
+
 	{% else %}
-  		<h1>No emails!</h1>
+    <h1>No emails!</h1>
 	{% endfor %}
   </body>
 </html>
