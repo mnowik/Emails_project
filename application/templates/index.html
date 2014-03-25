@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h2>Overview</h2>
+
+  {% if g.user and posts %}
+    
+    {% for post in posts %}
+      {% for photo in post['photos'] %}
+        {{ photo['original_size'] }}<p>
+      {% endfor %}
+    {% endfor %}
+
+      
+  {% else %}
+    <p>
+      Sign in to do sweet things w this example application
+    <p>
+      <a href="{{ url_for('login') }}"><img src="{{
+url_for('static', filename='sign-in.png') }}" alt="sign in"></a>
+  {% endif %}
+{% endblock %}

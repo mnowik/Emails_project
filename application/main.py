@@ -1,82 +1,78 @@
-from flask import Flask,render_template,request,json
+from flask import Flask, redirect, url_for, session, request
+from flask import g, session, request, url_for, flash
+from flask import redirect, render_template
+from flask_oauthlib.client import OAuth
+
+
+SECRET_KEY = 'development key'
+DEBUG = True
+FACEBOOK_APP_ID = 'id'
+FACEBOOK_APP_SECRET = 'secret'
+
+
 app = Flask(__name__)
+app.debug = DEBUG
+app.secret_key = SECRET_KEY
+oauth = OAuth()
 
-#---------------contextio loader------------------
-import contextio as c
+facebook = oauth.remote_app('facebook',
+    base_url='https://graph.facebook.com/',
+    request_token_url=None,
+    access_token_url='/oauth/access_token',
+    authorize_url='https://www.facebook.com/dialog/oauth',
+    consumer_key=FACEBOOK_APP_ID,
+    consumer_secret=FACEBOOK_APP_SECRET,
+    request_token_params={'scope': 'email'}
+)
 
-CONSUMER_KEY = 'key'
-CONSUMER_SECRET = 'pass'
-ID = 'id' 
+@facebook.tokengetter
+def get_facebook_oauth_token():
+    if session.has_key('facebook_oauth_tokens'):
+        del session['facebook_oauth_tokens']
+    return session.get('oauth_token')
 
+@app.before_request
+def before_request():
+    g.user = None
+    if 'facebook_oauth_tokens' in session:
+        g.user = session['facebook_oauth_tokens']
 
-context_io = c.ContextIO(
-	consumer_key=CONSUMER_KEY,
-	consumer_secret=CONSUMER_SECRET
-	)
+@app.route('/')
+def index():
+    posts = []
+    if g.user:
+        posts='oui'
 
-#---------------template in html---------------
-@app.route('/messages')
-def messages(name=None):
-    return render_template('slides.html', emails=messages())
-
+    return render_template('index.html', posts=posts)
+'''
+@app.route('/')
+def index():
+    return redirect(url_for('login'))
+'''
 
 @app.route('/login')
-def login(name=None):
-    return render_template('login.html')
-
-
-@app.route('/login1', methods=['GET', 'POST'])
-def login1():
-    return 'bonjour'
+def login():
+    return facebook.authorize(callback=url_for('facebook_authorized',
+        next=request.args.get('next') or request.referrer or None,
+        _external=True))
 
 
 
 
-@app.route('/login2', methods=["GET", "POST"])
-def login2():
-    if request.method == "POST":
-    	accounts = context_io.post_accounts()
-	# since we return a list, let's be sure we have a result
-	if accounts:
-	    account = accounts[0]
+@app.route('/login/authorized')
+@facebook.authorized_handler
+def facebook_authorized(resp):
+    if resp is None:
+        return 'Access denied: reason=%s error=%s' % (
+            request.args['error_reason'],
+            request.args['error_description']
+        )
+    session['oauth_token'] = (resp['access_token'], '')
+    me = facebook.get('/me')
+    return render_template('index.html', posts=me)
 
-	params = {
-	   'email': request.data
-	}
-	account = c.Account(context_io, params)
-	account.POST()
-
-        return account
-
-
-
-#----------------- functions------------------
-'''def connection():
-
-	accounts = context_io.get_accounts()
-	# since we return a list, let's be sure we have a result
-	if accounts:
-	    account = accounts[0]
-
-	params = {
-	   'id': ID
-	}
-	account = c.Account(context_io, params)
-	account.get()
-	return account.username'''
-
-def messages():
-	accounts = context_io.get_accounts()
-	# since we return a list, let's be sure we have a result
-	if accounts:
-	    account = accounts[0]
-	params = {
-	   'id': ID
-	}
-	emails=c.Account(context_io,params).get_messages()
-	return emails
 
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
