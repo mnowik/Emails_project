@@ -6,8 +6,8 @@ from flask_oauthlib.client import OAuth
 
 SECRET_KEY = 'development key'
 DEBUG = True
-FACEBOOK_APP_ID = 'id'
-FACEBOOK_APP_SECRET = 'secret'
+FACEBOOK_APP_ID = '690228564355373'
+FACEBOOK_APP_SECRET = '123a723b5e269c5d2b7274377317d965'
 
 
 app = Flask(__name__)
@@ -31,24 +31,26 @@ def get_facebook_oauth_token():
         del session['facebook_oauth_tokens']
     return session.get('oauth_token')
 
+
+
 @app.before_request
 def before_request():
     g.user = None
-    if 'facebook_oauth_tokens' in session:
-        g.user = session['facebook_oauth_tokens']
+    if 'oauth_token' in session:
+        g.user = session['oauth_token']
 
 @app.route('/')
 def index():
-    posts = []
     if g.user:
         posts='oui'
+    return render_template('index.html')
 
-    return render_template('index.html', posts=posts)
-'''
-@app.route('/')
-def index():
-    return redirect(url_for('login'))
-'''
+@app.route('/facebook.html')
+def yolo():
+    posts='non'
+    if g.user:
+        posts='oui'
+    return render_template('facebook.html')
 
 @app.route('/login')
 def login():
@@ -56,7 +58,10 @@ def login():
         next=request.args.get('next') or request.referrer or None,
         _external=True))
 
-
+@app.route('/logout')
+def logout():
+    session.pop('oauth_token', None)
+    return redirect(url_for('index'))
 
 
 @app.route('/login/authorized')
@@ -67,11 +72,9 @@ def facebook_authorized(resp):
             request.args['error_reason'],
             request.args['error_description']
         )
-    session['oauth_token'] = (resp['access_token'], '')
+    session['oauth_token'] = resp
     me = facebook.get('/me')
-    return render_template('index.html', posts=me)
-
-
+    return redirect(url_for('yolo'))
 
 
 if __name__ == '__main__':
