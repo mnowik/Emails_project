@@ -2,6 +2,7 @@ from flask import Flask, redirect, url_for, session, request
 from flask import g, session, request, url_for, flash
 from flask import redirect, render_template
 from flask_oauthlib.client import OAuth
+import facebook
 
 
 SECRET_KEY = 'development key'
@@ -15,7 +16,7 @@ app.debug = DEBUG
 app.secret_key = SECRET_KEY
 oauth = OAuth()
 
-facebook = oauth.remote_app('facebook',
+facebook_o = oauth.remote_app('facebook',
     base_url='https://graph.facebook.com/',
     request_token_url=None,
     access_token_url='/oauth/access_token',
@@ -25,13 +26,11 @@ facebook = oauth.remote_app('facebook',
     request_token_params={'scope': 'email'}
 )
 
-@facebook.tokengetter
+@facebook_o.tokengetter
 def get_facebook_oauth_token():
-    if session.has_key('facebook_oauth_tokens'):
-        del session['facebook_oauth_tokens']
+    if session.has_key('oauth_tokens'):
+        del session['oauth_tokens']
     return session.get('oauth_token')
-
-
 
 @app.before_request
 def before_request():
@@ -41,20 +40,11 @@ def before_request():
 
 @app.route('/')
 def index():
-    if g.user:
-        posts='oui'
     return render_template('index.html')
-
-@app.route('/facebook.html')
-def yolo():
-    posts='non'
-    if g.user:
-        posts='oui'
-    return render_template('facebook.html')
 
 @app.route('/login')
 def login():
-    return facebook.authorize(callback=url_for('facebook_authorized',
+    return facebook_o.authorize(callback=url_for('facebook_authorized',
         next=request.args.get('next') or request.referrer or None,
         _external=True))
 
@@ -63,9 +53,8 @@ def logout():
     session.pop('oauth_token', None)
     return redirect(url_for('index'))
 
-
 @app.route('/login/authorized')
-@facebook.authorized_handler
+@facebook_o.authorized_handler
 def facebook_authorized(resp):
     if resp is None:
         return 'Access denied: reason=%s error=%s' % (
@@ -73,9 +62,16 @@ def facebook_authorized(resp):
             request.args['error_description']
         )
     session['oauth_token'] = resp
-    me = facebook.get('/me')
-    return redirect(url_for('yolo'))
+    me = facebook_o.get('/me')
+    return redirect(url_for('index'))
 
+@app.route('/profile')
+def profile():
+    token=get_facebook_oauth_token()
+    graph = facebook.GraphAPI(token['access_token'])
+    profile = graph.get_object("me")
+    me = facebook_o.get('/me/friends')
+    return render_template('facebook.html', voici=profile)
 
 if __name__ == '__main__':
     app.run()

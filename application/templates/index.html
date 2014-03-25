@@ -1,7 +1,10 @@
   <h2>Overview</h2>
-
+    {% if g.user %}
+    Les profils est {{ voici }}
+    {% endif %}
     <p>
       {% if g.user %}
+        <a href="{{ url_for('profile') }}">Get profil</a>
         <a href="{{ url_for('logout') }}">Sign out</a>
       {% else %}
         <a href="{{ url_for('login') }}">Sign in</a>
