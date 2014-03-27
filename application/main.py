@@ -7,8 +7,8 @@ import facebook
 
 SECRET_KEY = 'development key'
 DEBUG = True
-FACEBOOK_APP_ID = '690228564355373'
-FACEBOOK_APP_SECRET = '3673a921df907875f5ff7cef1dc33406'
+FACEBOOK_APP_ID = 'app_id'
+FACEBOOK_APP_SECRET = 'app_secret'
 
 
 app = Flask(__name__)
