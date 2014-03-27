@@ -1,7 +1,9 @@
 {% if g.user %}
-	<li>{{profile}}</li>
+	Il y a {{ num}} amis
+	{% for friend in friends.data %}
+	<li>{{friend}}</li>
 	<!--<li>{{friends}}</li>
 	<li>{{ami}}</li>
 	<<li>{{feed}}</li>-->
-
+	{% endfor %}
  {%endif%}

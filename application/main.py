@@ -7,6 +7,8 @@ import facebook
 
 SECRET_KEY = 'development key'
 DEBUG = True
+FACEBOOK_APP_ID = 'app_id'
+FACEBOOK_APP_SECRET = 'app_secret'
 
 
 app = Flask(__name__)
@@ -22,7 +24,7 @@ facebook_o = oauth.remote_app('facebook',
     authorize_url='https://www.facebook.com/dialog/oauth',
     consumer_key=FACEBOOK_APP_ID,
     consumer_secret=FACEBOOK_APP_SECRET,
-    request_token_params={'scope': 'read_stream'}
+    request_token_params={'scope': 'user_birthday,friends_birthday'}   #special request params
 )
 
 @facebook_o.tokengetter
@@ -69,12 +71,15 @@ def facebook_authorized(resp):
 @app.route('/profile')
 def profile():
     graph = facebook.GraphAPI(session['oauth_token']['access_token'])
-    profile = graph.get_object("me",fields="feed")
+    profile = graph.get_object("me",fields="birthday,gender,name")
     #ami=graph.get_object("522000987",fields="bio")
     #amis=graph.get_objects({"1142987430","522000987"})
-    #friends = graph.get_connections("me", "friends")
     #newsfeed = graph.get_connections("me", "home")
     #feed = graph.get_connections("me", "permissions")
-    return render_template('facebook.html',profile=profile)
+    friends = graph.get_connections("me", "friends",fields="birthday,gender,name")
+
+    num=len(friends['data'])
+    return render_template('facebook.html',friends=friends,num=num)
+
 if __name__ == '__main__':
     app.run()
