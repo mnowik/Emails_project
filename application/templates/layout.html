@@ -4,10 +4,8 @@
 filename='style.css') }}">
 <h1>Flask OAuth Example</h1>
 <ul class=navigation>
-  <li><a href="{{ url_for('test') }}">overview</a>
-  {% if g.user %}
-  <li><a href="{{ url_for('logout') }}">sign out [{{ g.user.name }}]</a>
-  <li><a href="{{ url_for('get_posts')}}" target="_blank">Get slides with posts</a></li>
+	  {% if g.user %}
+  <li><a href="{{ url_for('logout') }}">sign out [{{ session.username }}]</a>
   {% else %}
   <li><a href="{{ url_for('login') }}">sign in</a>
   {% endif %}

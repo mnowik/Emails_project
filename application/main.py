@@ -7,8 +7,6 @@ import facebook
 
 SECRET_KEY = 'development key'
 DEBUG = True
-FACEBOOK_APP_ID = '690228564355373'
-FACEBOOK_APP_SECRET = '123a723b5e269c5d2b7274377317d965'
 
 
 app = Flask(__name__)
@@ -16,6 +14,7 @@ app.debug = DEBUG
 app.secret_key = SECRET_KEY
 oauth = OAuth()
 
+ #---------------- oauth part ----------------
 facebook_o = oauth.remote_app('facebook',
     base_url='https://graph.facebook.com/',
     request_token_url=None,
@@ -23,7 +22,7 @@ facebook_o = oauth.remote_app('facebook',
     authorize_url='https://www.facebook.com/dialog/oauth',
     consumer_key=FACEBOOK_APP_ID,
     consumer_secret=FACEBOOK_APP_SECRET,
-    request_token_params={'scope': 'email'}
+    request_token_params={'scope': 'read_stream'}
 )
 
 @facebook_o.tokengetter
@@ -62,16 +61,20 @@ def facebook_authorized(resp):
             request.args['error_description']
         )
     session['oauth_token'] = resp
-    me = facebook_o.get('/me')
+    session['username']=facebook_o.get('/me').data['name']
     return redirect(url_for('index'))
 
+
+#------------------- real apps ------------------
 @app.route('/profile')
 def profile():
-    token=get_facebook_oauth_token()
-    graph = facebook.GraphAPI(token['access_token'])
-    profile = graph.get_object("me")
-    me = facebook_o.get('/me/friends')
-    return render_template('facebook.html', voici=profile)
-
+    graph = facebook.GraphAPI(session['oauth_token']['access_token'])
+    profile = graph.get_object("me",fields="feed")
+    #ami=graph.get_object("522000987",fields="bio")
+    #amis=graph.get_objects({"1142987430","522000987"})
+    #friends = graph.get_connections("me", "friends")
+    #newsfeed = graph.get_connections("me", "home")
+    #feed = graph.get_connections("me", "permissions")
+    return render_template('facebook.html',profile=profile)
 if __name__ == '__main__':
     app.run()
